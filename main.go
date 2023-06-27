@@ -127,7 +127,7 @@ func getSubnetData(supernet netip.Prefix) []Subnet {
 func generateGeofeed() {
 	var feed Geofeed
 
-	fmt.Print("Generating geofeed... ")
+	log.Print("Generating geofeed...")
 
 	for _, supernet := range supernets {
 		tmp, _ := netip.ParsePrefix(supernet)
@@ -146,7 +146,7 @@ func generateGeofeed() {
 	feed.Generated = time.Now().UTC()
 	geofeed = feed
 
-	fmt.Println("Done")
+	log.Println("Geofeed generation done")
 }
 
 func handleGeofeed(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +185,7 @@ func main() {
 	sched.EveryRandom(24, 36).Hours().Do(generateGeofeed)
 	sched.StartAsync()
 
-	fmt.Println("Starting server...")
+	log.Println("Starting server...")
 	http.HandleFunc("/", handleGeofeed)
 	http.HandleFunc("/generate", handleRegenerateGeofeed)
 	log.Fatal(http.ListenAndServe(":8080", nil))
