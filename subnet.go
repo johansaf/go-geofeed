@@ -5,6 +5,7 @@ import (
 	"net/netip"
 )
 
+// Makes a whois query and return the supernet data
 func getSupernetData(supernet netip.Prefix) (Allocation, error) {
 	var allocation Allocation
 	var url string
@@ -24,12 +25,15 @@ func getSupernetData(supernet netip.Prefix) (Allocation, error) {
 	if err != nil {
 		return allocation, err
 	}
+
+	// We assume only one result
 	allocation.Prefix = data[0].Prefix
 	allocation.Country = data[0].Country
 
 	return allocation, err
 }
 
+// Makes a whois query and returns all subnets contained within a supernet
 func getSubnetData(supernet netip.Prefix) ([]Subnet, error) {
 	var subnets []Subnet
 	var url string

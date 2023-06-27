@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	sched := gocron.NewScheduler(time.UTC)
 	sched.EveryRandom(24, 36).Hours().Do(generateGeofeed)
 	sched.StartAsync()

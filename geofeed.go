@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Generates the geofeed and stores it into memory
 func generateGeofeed() {
 	var feed Geofeed
 
@@ -20,12 +21,14 @@ func generateGeofeed() {
 			continue
 		}
 
+		// Get the supernet data
 		allocationData, err := getSupernetData(tmp)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
+		// Get all subnets contained within the supernet
 		subnetData, err := getSubnetData(tmp)
 		if err != nil {
 			log.Println(err)
@@ -33,6 +36,7 @@ func generateGeofeed() {
 		}
 
 		for _, i := range subnetData {
+			// If the subnet country is different from the supernet country then add it to the list
 			if i.Country != allocationData.Country {
 				allocationData.Subnets = append(allocationData.Subnets, i)
 			}
@@ -49,16 +53,16 @@ func generateGeofeed() {
 
 func handleGeofeed(w http.ResponseWriter, r *http.Request) {
 	if len(geofeed.Allocations) == 0 {
-		// Return a 503 Service Unavailable
+		// If the geofeed is still being generated we return a 503 Service Unavailable
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
 
-	// Add a Last-Modified header
 	w.Header().Set("Last-Modified", geofeed.Generated.Format(time.RFC1123))
 
 	fmt.Fprintf(w, "# Generated %s\n", geofeed.Generated.Format(time.RFC3339Nano))
 
+	// Loop through the geofeed struct and print out the entries
 	for _, allocation := range geofeed.Allocations {
 		fmt.Fprintf(w, "%s,%s,,,\n", allocation.Prefix, allocation.Country)
 		for _, subnet := range allocation.Subnets {
@@ -69,10 +73,9 @@ func handleGeofeed(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "# EOF\n")
 }
 
+// Regenerates the geofeed if we want to force an update
 func handleRegenerateGeofeed(w http.ResponseWriter, r *http.Request) {
 	// TODO: Check if the request is coming from a trusted source, or using a secret token
-	// Regenerate the geofeed
 	generateGeofeed()
-	// Return a 200 OK
 	w.WriteHeader(http.StatusOK)
 }
