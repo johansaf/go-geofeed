@@ -13,34 +13,9 @@ import (
 	"github.com/go-co-op/gocron"
 )
 
-type WhoisResources struct {
-	Objects []struct {
-		Attributes []struct {
-			Name  string `xml:"name,attr"`
-			Value string `xml:"value,attr"`
-		} `xml:"attributes>attribute"`
-	} `xml:"objects>object"`
-}
-
 var supernets = []string{"192.0.2.0/24", "2001:db8::/32"}
 
 var geofeed Geofeed
-
-type Geofeed struct {
-	Generated   time.Time
-	Allocations []Allocation
-}
-
-type Subnet struct {
-	Prefix  netip.Prefix
-	Country string
-}
-
-type Allocation struct {
-	Prefix  netip.Prefix
-	Country string
-	Subnets []Subnet
-}
 
 func getSupernetData(supernet netip.Prefix) Allocation {
 	var allocation Allocation
@@ -69,11 +44,11 @@ func getSupernetData(supernet netip.Prefix) Allocation {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	var whoisResources WhoisResources
-	xml.Unmarshal(body, &whoisResources)
+	var whoisResult WhoisResult
+	xml.Unmarshal(body, &whoisResult)
 
 	// Loop through the objects and look for the inetnum and country attributes, print them when found
-	for _, object := range whoisResources.Objects {
+	for _, object := range whoisResult.Objects {
 		for _, attribute := range object.Attributes {
 			if attribute.Name == "inetnum" {
 				// Split the inetnum
@@ -122,11 +97,11 @@ func getSubnetData(supernet netip.Prefix) []Subnet {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	var whoisResources WhoisResources
-	xml.Unmarshal(body, &whoisResources)
+	var whoisResult WhoisResult
+	xml.Unmarshal(body, &whoisResult)
 
 	// Loop through the objects, create a temporary Subnet struct, look for the inetnum and country attributes, append them to the subnets slice
-	for _, object := range whoisResources.Objects {
+	for _, object := range whoisResult.Objects {
 		var subnet Subnet
 		for _, attribute := range object.Attributes {
 			if attribute.Name == "inetnum" {
