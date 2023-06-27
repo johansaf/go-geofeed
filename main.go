@@ -13,10 +13,6 @@ import (
 	"github.com/go-co-op/gocron"
 )
 
-var supernets = []string{"192.0.2.0/24", "2001:db8::/32"}
-
-var geofeed Geofeed
-
 func getWhoisData(net netip.Prefix, url string) (WhoisResult, error) {
 	var whoisResult WhoisResult
 
@@ -63,27 +59,45 @@ func getSupernetData(supernet netip.Prefix) (Allocation, error) {
 		return allocation, err
 	}
 
-	// Loop through the objects and look for the inetnum and country attributes, print them when found
+	data, err := parseWhoisResult(whoisResult)
+	if err != nil {
+		return allocation, err
+	}
+	allocation.Prefix = data[0].Prefix
+	allocation.Country = data[0].Country
+
+	return allocation, err
+}
+
+func parseWhoisResult(whoisResult WhoisResult) ([]Subnet, error) {
+	var subnets []Subnet
+
 	for _, object := range whoisResult.Objects {
+		var subnet Subnet
 		for _, attribute := range object.Attributes {
 			if attribute.Name == "inetnum" {
-				// Split the inetnum
 				inetnum := strings.Split(attribute.Value, " - ")
-				// Calculate the CIDR
-				x, _ := netip.ParseAddr(inetnum[0])
-				y, _ := netip.ParseAddr(inetnum[1])
-				allocation.Prefix = calcIPv4Cidr(x, y)
+				start, err := netip.ParseAddr(inetnum[0])
+				if err != nil {
+					return subnets, err
+				}
+				end, err := netip.ParseAddr(inetnum[1])
+				if err != nil {
+					return subnets, err
+				}
+				subnet.Prefix = calcIPv4Cidr(start, end)
 			} else if attribute.Name == "inet6num" {
-				allocation.Prefix = netip.MustParsePrefix(attribute.Value)
+				subnet.Prefix = netip.MustParsePrefix(attribute.Value)
 			}
 
 			if attribute.Name == "country" {
-				allocation.Country = attribute.Value
+				subnet.Country = attribute.Value
 			}
 		}
+		subnets = append(subnets, subnet)
 	}
 
-	return allocation, err
+	return subnets, nil
 }
 
 func getSubnetData(supernet netip.Prefix) ([]Subnet, error) {
@@ -101,25 +115,9 @@ func getSubnetData(supernet netip.Prefix) ([]Subnet, error) {
 		return subnets, err
 	}
 
-	// Loop through the objects, create a temporary Subnet struct, look for the inetnum and country attributes, append them to the subnets slice
-	for _, object := range whoisResult.Objects {
-		var subnet Subnet
-		for _, attribute := range object.Attributes {
-			if attribute.Name == "inetnum" {
-				// Split the inetnum
-				inetnum := strings.Split(attribute.Value, " - ")
-				// Calculate the CIDR
-				x, _ := netip.ParseAddr(inetnum[0])
-				y, _ := netip.ParseAddr(inetnum[1])
-				subnet.Prefix = calcIPv4Cidr(x, y)
-			} else if attribute.Name == "inet6num" {
-				subnet.Prefix = netip.MustParsePrefix(attribute.Value)
-			}
-			if attribute.Name == "country" {
-				subnet.Country = attribute.Value
-			}
-		}
-		subnets = append(subnets, subnet)
+	subnets, err = parseWhoisResult(whoisResult)
+	if err != nil {
+		return subnets, err
 	}
 
 	return subnets, err
