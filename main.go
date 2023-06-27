@@ -17,35 +17,51 @@ var supernets = []string{"192.0.2.0/24", "2001:db8::/32"}
 
 var geofeed Geofeed
 
-func getSupernetData(supernet netip.Prefix) Allocation {
-	var allocation Allocation
-	var base_url string
-
-	if supernet.Addr().Is4() {
-		base_url = "https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inetnum"
-	} else {
-		base_url = "https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inet6num"
-	}
-	url := fmt.Sprintf(base_url, supernet)
+func getWhoisData(net netip.Prefix, url string) (WhoisResult, error) {
+	var whoisResult WhoisResult
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal(err)
+		return whoisResult, err
 	}
 
 	req.Header.Set("Accept", "application/xml")
+	//req.Header.Set("User-Agent", "xxx")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return whoisResult, err
 	}
 
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return whoisResult, err
+	}
 
-	var whoisResult WhoisResult
-	xml.Unmarshal(body, &whoisResult)
+	err = xml.Unmarshal(body, &whoisResult)
+	if err != nil {
+		return whoisResult, err
+	}
+
+	return whoisResult, nil
+}
+
+func getSupernetData(supernet netip.Prefix) Allocation {
+	var allocation Allocation
+	var url string
+
+	if supernet.Addr().Is4() {
+		url = fmt.Sprintf("https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inetnum", supernet)
+	} else if supernet.Addr().Is6() {
+		url = fmt.Sprintf("https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inet6num", supernet)
+	}
+
+	whoisResult, err := getWhoisData(supernet, url)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Loop through the objects and look for the inetnum and country attributes, print them when found
 	for _, object := range whoisResult.Objects {
@@ -72,33 +88,18 @@ func getSupernetData(supernet netip.Prefix) Allocation {
 
 func getSubnetData(supernet netip.Prefix) []Subnet {
 	var subnets []Subnet
-	var base_url string
+	var url string
 
 	if supernet.Addr().Is4() {
-		base_url = "https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inetnum&flags=M"
+		url = fmt.Sprintf("https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inetnum&flags=M", supernet)
 	} else if supernet.Addr().Is6() {
-		base_url = "https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inet6num&flags=M"
+		url = fmt.Sprintf("https://rest.db.ripe.net/search?source=ripe&query-string=%s&flags=no-referenced&type-filter=inet6num&flags=M", supernet)
 	}
-	url := fmt.Sprintf(base_url, supernet)
 
-	req, err := http.NewRequest("GET", url, nil)
+	whoisResult, err := getWhoisData(supernet, url)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	req.Header.Set("Accept", "application/xml")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	var whoisResult WhoisResult
-	xml.Unmarshal(body, &whoisResult)
 
 	// Loop through the objects, create a temporary Subnet struct, look for the inetnum and country attributes, append them to the subnets slice
 	for _, object := range whoisResult.Objects {
