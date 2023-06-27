@@ -14,7 +14,7 @@ func generateGeofeed() {
 
 	log.Print("Generating geofeed...")
 
-	for _, supernet := range supernets {
+	for _, supernet := range cfg.Networks {
 		tmp, err := netip.ParsePrefix(supernet)
 		if err != nil {
 			log.Println(err)

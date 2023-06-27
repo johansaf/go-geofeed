@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// Contains the supernets to be used for geofeed generation
-var supernets = []string{"192.0.2.0/24", "2001:db8::/32"}
-
 // Contains the geofeed
 var geofeed Geofeed
 
@@ -38,4 +35,12 @@ type Allocation struct {
 type Subnet struct {
 	Prefix  netip.Prefix
 	Country string
+}
+
+// Configuration struct
+type Config struct {
+	ListenAddress      string
+	RefreshIntervalMin int
+	RefreshIntervalMax int
+	Networks           []string
 }
