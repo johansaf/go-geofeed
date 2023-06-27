@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+var supernets = []string{"192.0.2.0/24", "2001:db8::/32"}
+var geofeed Geofeed
+
 type WhoisResult struct {
 	Objects []struct {
 		Attributes []struct {
