@@ -48,7 +48,7 @@ func getWhoisData(net netip.Prefix, url string) (WhoisResult, error) {
 	return whoisResult, nil
 }
 
-func getSupernetData(supernet netip.Prefix) Allocation {
+func getSupernetData(supernet netip.Prefix) (Allocation, error) {
 	var allocation Allocation
 	var url string
 
@@ -60,7 +60,7 @@ func getSupernetData(supernet netip.Prefix) Allocation {
 
 	whoisResult, err := getWhoisData(supernet, url)
 	if err != nil {
-		log.Fatal(err)
+		return allocation, err
 	}
 
 	// Loop through the objects and look for the inetnum and country attributes, print them when found
@@ -83,10 +83,10 @@ func getSupernetData(supernet netip.Prefix) Allocation {
 		}
 	}
 
-	return allocation
+	return allocation, err
 }
 
-func getSubnetData(supernet netip.Prefix) []Subnet {
+func getSubnetData(supernet netip.Prefix) ([]Subnet, error) {
 	var subnets []Subnet
 	var url string
 
@@ -98,7 +98,7 @@ func getSubnetData(supernet netip.Prefix) []Subnet {
 
 	whoisResult, err := getWhoisData(supernet, url)
 	if err != nil {
-		log.Fatal(err)
+		return subnets, err
 	}
 
 	// Loop through the objects, create a temporary Subnet struct, look for the inetnum and country attributes, append them to the subnets slice
@@ -122,7 +122,7 @@ func getSubnetData(supernet netip.Prefix) []Subnet {
 		subnets = append(subnets, subnet)
 	}
 
-	return subnets
+	return subnets, err
 }
 
 func generateGeofeed() {
@@ -131,9 +131,23 @@ func generateGeofeed() {
 	log.Print("Generating geofeed...")
 
 	for _, supernet := range supernets {
-		tmp, _ := netip.ParsePrefix(supernet)
-		allocationData := getSupernetData(tmp)
-		subnetData := getSubnetData(tmp)
+		tmp, err := netip.ParsePrefix(supernet)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		allocationData, err := getSupernetData(tmp)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		subnetData, err := getSubnetData(tmp)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
 		for _, i := range subnetData {
 			if i.Country != allocationData.Country {
