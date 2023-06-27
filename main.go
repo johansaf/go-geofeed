@@ -4,18 +4,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/go-co-op/gocron"
 )
 
 var cfg = Config{}
-
-// Function to take a comma separated list of networks and return a slice of strings
-func parseNetworks(networks string) []string {
-	return strings.Split(networks, ",")
-}
 
 func readConfig() Config {
 	// Check if the LISTEN_ADDRESS environment variable is set, set to ":8080" if not

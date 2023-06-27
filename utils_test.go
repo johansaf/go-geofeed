@@ -49,3 +49,16 @@ func TestCalcIPv4Cidr(t *testing.T) {
 		t.Errorf("Expected 32, got %s", cidr.String())
 	}
 }
+
+func TestParseNetworks(t *testing.T) {
+	networks := parseNetworks("192.0.2.0/24,2001:db8::/32")
+	if len(networks) != 2 {
+		t.Errorf("Expected 2, got %d", len(networks))
+	}
+	if networks[0] != "192.0.2.0/24" {
+		t.Errorf("Expected 192.0.2.0/24, got %s", networks[0])
+	}
+	if networks[1] != "2001:db8::/32" {
+		t.Errorf("Expected 2001:db8::/32, got %s", networks[1])
+	}
+}

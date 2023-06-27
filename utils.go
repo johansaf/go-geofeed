@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 	"net/netip"
+	"strings"
 )
 
 func calcIPv4Cidr(start, end netip.Addr) netip.Prefix {
@@ -23,4 +24,9 @@ func calcIPv4Cidr(start, end netip.Addr) netip.Prefix {
 	}
 
 	return netip.PrefixFrom(start, maskSize)
+}
+
+// Function to take a comma separated list of networks and return a slice of strings
+func parseNetworks(networks string) []string {
+	return strings.Split(networks, ",")
 }
