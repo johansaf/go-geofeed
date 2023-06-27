@@ -18,7 +18,7 @@ func getWhoisData(net netip.Prefix, url string) (WhoisResult, error) {
 	}
 
 	req.Header.Set("Accept", "application/xml")
-	//req.Header.Set("User-Agent", "xxx")
+	req.Header.Set("User-Agent", "go-geofeed/contact "+cfg.Email)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

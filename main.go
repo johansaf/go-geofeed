@@ -39,11 +39,19 @@ func readConfig() Config {
 
 	networks := parseNetworks(os.Getenv("NETWORKS"))
 
+	// Require an e-mail address to be set, incase the database operator needs to contact you
+	if os.Getenv("EMAIL") == "" {
+		log.Fatal("EMAIL environment variable not set")
+	}
+
+	email := os.Getenv("EMAIL")
+
 	cfg := Config{
 		ListenAddress:      os.Getenv("LISTEN_ADDRESS"),
 		RefreshIntervalMin: 24,
 		RefreshIntervalMax: 36,
 		Networks:           networks,
+		Email:              email,
 	}
 
 	return cfg
