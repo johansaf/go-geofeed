@@ -44,4 +44,5 @@ type Config struct {
 	RefreshIntervalMax int
 	Networks           []string
 	Email              string
+	Key                string
 }

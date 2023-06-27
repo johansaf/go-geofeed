@@ -75,7 +75,16 @@ func handleGeofeed(w http.ResponseWriter, r *http.Request) {
 
 // Regenerates the geofeed if we want to force an update
 func handleRegenerateGeofeed(w http.ResponseWriter, r *http.Request) {
-	// TODO: Check if the request is coming from a trusted source, or using a secret token
+	if cfg.Key == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	if r.Header.Get("X-Geofeed-Key") != cfg.Key {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	generateGeofeed()
 	w.WriteHeader(http.StatusOK)
 }

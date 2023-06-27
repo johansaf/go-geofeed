@@ -3,53 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-co-op/gocron"
 )
 
 var cfg = Config{}
-
-func readConfig() Config {
-	// Check if the LISTEN_ADDRESS environment variable is set, set to ":8080" if not
-	if os.Getenv("LISTEN_ADDRESS") == "" {
-		os.Setenv("LISTEN_ADDRESS", ":8080")
-	}
-
-	// Check if REFRESH_INTERVAL variables
-	if os.Getenv("REFRESH_INTERVAL_MIN") == "" {
-		os.Setenv("REFRESH_INTERVAL_MIN", "24")
-	}
-
-	if os.Getenv("REFRESH_INTERVAL_MAX") == "" {
-		os.Setenv("REFRESH_INTERVAL_MAX", "36")
-	}
-
-	// Split the list of networks into a slice
-	if os.Getenv("NETWORKS") == "" {
-		log.Fatal("NETWORKS environment variable not set")
-	}
-
-	networks := parseNetworks(os.Getenv("NETWORKS"))
-
-	// Require an e-mail address to be set, incase the database operator needs to contact you
-	if os.Getenv("EMAIL") == "" {
-		log.Fatal("EMAIL environment variable not set")
-	}
-
-	email := os.Getenv("EMAIL")
-
-	cfg := Config{
-		ListenAddress:      os.Getenv("LISTEN_ADDRESS"),
-		RefreshIntervalMin: 24,
-		RefreshIntervalMax: 36,
-		Networks:           networks,
-		Email:              email,
-	}
-
-	return cfg
-}
 
 func main() {
 	cfg = readConfig()
