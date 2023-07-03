@@ -54,6 +54,7 @@ func generateGeofeed() {
 func handleGeofeed(w http.ResponseWriter, r *http.Request) {
 	if len(geofeed.Allocations) == 0 {
 		// If the geofeed is still being generated we return a 503 Service Unavailable
+		w.Header().Set("Retry-After", "300") // Tell the client to retry after 5 minutes
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
