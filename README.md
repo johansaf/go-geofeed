@@ -4,6 +4,17 @@ Generate a [RFC8805](https://datatracker.ietf.org/doc/html/rfc8805) compliant ge
 
 This information should preferably be gathered from internal databases and not by using an external resource.
 
+## Installation
+Get the source and do something like this:
+
+```shell
+$ go mod download
+$ go mod verify
+$ go build -v -o geofeed
+```
+
+Copy the `geofeed` binary to a good location, set the environment variables and run it. I don't run this using systemd so I can't provide directions for it :)
+
 ## Configuration
 Configuration is done by setting environment variables.
 
