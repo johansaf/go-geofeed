@@ -89,3 +89,8 @@ func handleRegenerateGeofeed(w http.ResponseWriter, r *http.Request) {
 	generateGeofeed()
 	w.WriteHeader(http.StatusOK)
 }
+
+// Any requests not matching the above handlers will be redirected to the geofeed instead of a 404
+func handleUnknown(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/geofeed.csv", http.StatusMovedPermanently)
+}

@@ -19,7 +19,8 @@ func main() {
 
 	log.Printf("Listening on %s", cfg.ListenAddress)
 	log.Printf("Refresh interval: %d-%d hours", cfg.RefreshIntervalMin, cfg.RefreshIntervalMax)
-	http.HandleFunc("/", handleGeofeed)
+	http.HandleFunc("/", handleUnknown)
+	http.HandleFunc("/geofeed.csv", handleGeofeed)
 	http.HandleFunc("/generate", handleRegenerateGeofeed)
 	log.Fatal(http.ListenAndServe(cfg.ListenAddress, nil))
 }
