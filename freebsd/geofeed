@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# PROVIDE: geofeed
+# REQUIRE: DAEMON
+# KEYWORD: shutdown
+
+# Put this file in /usr/local/etc/rc.d and chmod +x it
+# Enable by editing /etc/rc.conf:
+# geofeed_enable="YES"
+# geofeed_env="NETWORKS=192.0.2.0/24,2001:db8::/32 EMAIL=me@example.com"
+
+. /etc/rc.subr
+
+name=geofeed
+rcvar=geofeed_enable
+desc="go-geofeed - https://github.com/johansaf/go-geofeed"
+
+load_rc_config ${name}
+
+: ${geofeed_enable:=NO}
+
+procname="/usr/local/bin/geofeed"
+pidfile="/var/run/${name}.pid"
+command="/usr/sbin/daemon"
+command_args="--close-fds --syslog --child-pidfile ${pidfile} --user nobody ${procname}"
+
+run_rc_command "$1"
